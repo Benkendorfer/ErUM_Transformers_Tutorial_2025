@@ -1,0 +1,3 @@
+[submodule "data/Enron"]
+	path = data/Enron
+	url = git@github.com:Charlie9/enron_intent_dataset_verified.git

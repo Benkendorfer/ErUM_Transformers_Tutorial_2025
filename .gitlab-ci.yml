@@ -1,0 +1,18 @@
+# image: docker:latest
+
+# services:
+#   - docker:dind
+
+# variables:
+#   DOCKER_DRIVER: overlay2
+
+stages:
+  - test
+
+check_notebook_strip:
+  stage: test
+  image: python:3.8
+  script:
+    - pip install nbstripout
+    - nbstripout --install .
+    - git diff --exit-code
