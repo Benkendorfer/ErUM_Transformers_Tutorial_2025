@@ -1,0 +1,15 @@
+name: ErUM-2
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - ipykernel
+  - matplotlib
+  - numpy
+  - pandas
+  - python
+  - pytorch
+  - torchtext=0.17.0
+  - scikit-learn
+prefix: /Users/keesbenkendorfer/miniconda3/envs/ErUM-2
