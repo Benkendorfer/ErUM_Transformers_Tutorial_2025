@@ -1,3 +1,13 @@
+"""
+Visualization functions for the request classification task.
+
+This file contains several visualization utilities for the attention model
+used in the request classification task.
+
+Written by Kees Benkendorfer and Knut Zoch for the 2025 ErUM-Data-Hub Deep
+Learning tutorial in Aachen, Germany.
+"""
+
 from IPython.display import HTML, display
 import numpy as np
 

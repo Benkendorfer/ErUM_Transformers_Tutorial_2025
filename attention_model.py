@@ -13,6 +13,7 @@ import numpy as np
 
 from torch import nn
 
+import torch
 import torch.nn.functional as F
 
 def scaled_dot_product_attention(q, k, v, mask=None):
@@ -153,6 +154,29 @@ class RequestClassifier(nn.Module):
         self.classifier = nn.Linear(d_attention, 2)
 
     def forward(self, src, src_key_padding_mask=None, return_attn=False):
+        """
+        Forward pass of the model.
+
+        Parameters
+        ----------
+        src : torch.Tensor
+            Input tensor of shape (batch_size, seq_len).
+        src_key_padding_mask : torch.Tensor, optional
+            Key padding mask tensor of shape (batch_size, seq_len). Default is None.
+        return_attn : bool, optional
+            If True, return the attention weights. Default is False.
+
+        Returns
+        -------
+        torch.Tensor
+            Output tensor of shape (batch_size, 2).
+        torch.Tensor, optional
+            Attention weights of the last layer.
+            They have shape (batch_size, num_heads, seq_len, seq_len).
+            Only returned if return_attn is True.
+        """
+        if src_key_padding_mask is None:
+            src_key_padding_mask = torch.zeros(src.size(0), src.size(1), dtype=torch.bool)
         pad_mask   = src_key_padding_mask
         valid_mask = ~pad_mask
         x = self.embed(src)
@@ -166,4 +190,3 @@ class RequestClassifier(nn.Module):
         pooled  = (x * valid_mask.unsqueeze(-1)).sum(1) / lengths
         logits = self.classifier(pooled)
         return (logits, last_attn) if return_attn else logits
-
