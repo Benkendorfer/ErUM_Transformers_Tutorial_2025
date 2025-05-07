@@ -50,12 +50,12 @@ class SimpleAttention(nn.Module):
     A simple attention mechanism.
     """
 
-    def __init__(self, d_model):
+    def __init__(self, d_attention, d_embedding):
         super().__init__()
-        self.q = nn.Linear(d_model, d_model)
-        self.k = nn.Linear(d_model, d_model)
-        self.v = nn.Linear(d_model, d_model)
-        self.out = nn.Linear(d_model, d_model)
+        self.q = nn.Linear(d_embedding, d_attention)
+        self.k = nn.Linear(d_embedding, d_attention)
+        self.v = nn.Linear(d_embedding, d_attention)
+        self.out = nn.Linear(d_attention, d_embedding)
 
     def forward(self, x, mask=None, return_attn=False):
         """
@@ -64,7 +64,7 @@ class SimpleAttention(nn.Module):
         Parameters
         ----------
         x : torch.Tensor
-            Input tensor of shape (batch_size, seq_len, d_model).
+            Input tensor of shape (batch_size, seq_len, d_embedding).
         mask : torch.Tensor, optional
             Mask tensor of shape (batch_size, seq_len). Default is None.
         return_attn : bool, optional
@@ -73,7 +73,7 @@ class SimpleAttention(nn.Module):
         Returns
         -------
         torch.Tensor
-            Output tensor of shape (batch_size, seq_len, d_model).
+            Output tensor of shape (batch_size, seq_len, d_attention).
         torch.Tensor, optional
             Attention weights of shape (batch_size, num_heads, seq_len, seq_len).
             Only returned if return_attn is True.
@@ -94,16 +94,16 @@ class SimpleEncoderLayer(nn.Module):
     feedforward network.
     """
 
-    def __init__(self, d_model, dim_feedforward=512, dropout=0.1):
+    def __init__(self, d_attention, d_embedding, dim_feedforward=512, dropout=0.1):
         super().__init__()
-        self.self_attn = SimpleAttention(d_model)
-        self.norm1 = nn.LayerNorm(d_model)
+        self.self_attn = SimpleAttention(d_attention, d_embedding)
+        self.norm1 = nn.LayerNorm(d_embedding)
         self.ff  = nn.Sequential(
-            nn.Linear(d_model, dim_feedforward),
+            nn.Linear(d_embedding, dim_feedforward),
             nn.ReLU(),
-            nn.Linear(dim_feedforward, d_model)
+            nn.Linear(dim_feedforward, d_embedding)
         )
-        self.norm2 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_embedding)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x, mask=None, return_attn=False):
@@ -145,13 +145,13 @@ class RequestClassifier(nn.Module):
     A simple model that stacks multiple encoder layers to classify requests.
     """
 
-    def __init__(self, vocab_size, d_attention=128, d_embedding=128, num_layers=2):
+    def __init__(self, vocab_size, d_attention=8, d_embedding=128, num_layers=1):
         super().__init__()
-        self.embed = nn.Embedding(vocab_size, d_attention)
+        self.embed = nn.Embedding(vocab_size, d_embedding)
         self.layers = nn.ModuleList([
-            SimpleEncoderLayer(d_attention) for _ in range(num_layers)
+            SimpleEncoderLayer(d_attention, d_embedding) for _ in range(num_layers)
         ])
-        self.classifier = nn.Linear(d_attention, 2)
+        self.classifier = nn.Linear(d_embedding, 2)
 
     def forward(self, src, src_key_padding_mask=None, return_attn=False):
         """
