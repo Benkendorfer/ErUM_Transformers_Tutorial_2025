@@ -1,4 +1,4 @@
-name: ErUM-2
+name: ErUM
 channels:
   - pytorch
   - conda-forge
@@ -10,7 +10,9 @@ dependencies:
   - pandas
   - python
   - pytorch
-  - torchtext=0.17.0
   - scikit-learn
   - spacy
-prefix: /Users/keesbenkendorfer/miniconda3/envs/ErUM-2
+  - torchtext=0.17.0
+  - transformers
+  - nbstripout
+prefix: /Users/keesbenkendorfer/miniconda3/envs/ErUM
