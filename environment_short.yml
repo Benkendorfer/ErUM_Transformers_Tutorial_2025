@@ -16,4 +16,5 @@ dependencies:
   - nbstripout
   - ipywidgets
   - torchtext
+  - jupyter
 prefix: /Users/keesbenkendorfer/miniconda3/envs/ErUM
