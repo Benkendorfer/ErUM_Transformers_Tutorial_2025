@@ -1,15 +1,41 @@
-import math
+"""
+A simple attention model for the Enron email dataset.
 
-import torch.nn as nn
+This file contains the nuts and bolts of the attention model implementation
+for the request classification task. It includes a simple attention
+mechanism, a very basic encoder layer, and a model that stacks them together.
+
+Written by Kees Benkendorfer and Knut Zoch for the 2025 ErUM-Data-Hub Deep
+Learning tutorial in Aachen, Germany.
+"""
+
+import numpy as np
+
+from torch import nn
 
 import torch.nn.functional as F
 
-import torch
-from torch.utils.data import Dataset
-
 def scaled_dot_product_attention(q, k, v, mask=None):
-    # q,k,v: [batch, heads, seq, d_k]
-    scores = (q @ k.transpose(-2, -1)) / math.sqrt(q.size(-1))
+    """
+    Scaled dot-product attention function.
+
+    Parameters
+    ----------
+    q : torch.Tensor
+        Query tensor of shape (batch_size, num_heads, seq_len, d_k).
+    k : torch.Tensor
+        Key tensor of shape (batch_size, num_heads, seq_len, d_k).
+    v : torch.Tensor
+        Value tensor of shape (batch_size, num_heads, seq_len, d_v).
+    mask : torch.Tensor, optional
+        Mask tensor of shape (batch_size, 1, seq_len, seq_len). Default is None.
+
+    Returns
+    -------
+    torch.Tensor
+        Output tensor of shape (batch_size, num_heads, seq_len, d_v).
+    """
+    scores = (q @ k.transpose(-2, -1)) / np.sqrt(q.size(-1))
     if mask is not None:
         scores = scores.masked_fill(mask == 0, float('-inf'))
     attn = F.softmax(scores, dim=-1)
@@ -27,7 +53,7 @@ class SimpleAttention(nn.Module):
     def forward(self, x, mask=None, return_attn=False):
         # x: [B, S, D], mask: Bool [B, S] True=real
         Q, K, V = self.q(x), self.k(x), self.v(x)
-        scores  = (Q @ K.transpose(-2,-1)) / math.sqrt(Q.size(-1))
+        scores  = (Q @ K.transpose(-2,-1)) / np.sqrt(Q.size(-1))
         if mask is not None:
             scores = scores.masked_fill(~mask.unsqueeze(1), float('-inf'))
         attn = F.softmax(scores, dim=-1)             # [B, S, S]
@@ -35,7 +61,7 @@ class SimpleAttention(nn.Module):
         return (out, attn) if return_attn else out
 
 # Now a tiny encoder layer: attention + FFN + residual & norm
-class MyEncoderLayer(nn.Module):
+class SimpleEncoderLayer(nn.Module):
     def __init__(self, d_model, dim_feedforward=512, dropout=0.1):
         super().__init__()
         self.self_attn = SimpleAttention(d_model)
@@ -63,7 +89,7 @@ class RequestClassifier(nn.Module):
         super().__init__()
         self.embed = nn.Embedding(vocab_size, d_model)
         self.layers = nn.ModuleList([
-            MyEncoderLayer(d_model) for _ in range(num_layers)
+            SimpleEncoderLayer(d_model) for _ in range(num_layers)
         ])
         self.classifier = nn.Linear(d_model, 2)
 
@@ -81,26 +107,4 @@ class RequestClassifier(nn.Module):
         pooled  = (x * valid_mask.unsqueeze(-1)).sum(1) / lengths
         logits = self.classifier(pooled)
         return (logits, last_attn) if return_attn else logits
-
-class EnronRequestDataset(Dataset):
-    def __init__(self, texts, labels, vocab, tokenizer):
-        """
-        texts: List[str]
-        labels: List[int]  (0=no-request, 1=request)
-        vocab: torchtext.vocab.Vocab
-        tokenizer: callable→List[str]
-        """
-        self.texts = texts
-        self.labels = labels
-        self.vocab = vocab
-        self.tokenizer = tokenizer
-
-    def __len__(self):
-        return len(self.texts)
-
-    def __getitem__(self, idx):
-        tokens = self.tokenizer(self.texts[idx])
-        token_ids = torch.tensor(self.vocab(tokens), dtype=torch.long)
-        label    = torch.tensor(self.labels[idx], dtype=torch.long)
-        return token_ids, label
 
