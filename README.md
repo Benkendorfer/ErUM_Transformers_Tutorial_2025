@@ -44,3 +44,21 @@ jupyter notebook
 This should launch a Jupyter interface in your web browser.
 
 ## Running on Google Colab
+
+To run on Google Colab, navigate to <https://colab.research.google.com/> in your browser. You should be presented with a popup asking you to open a notebook. There will be an option for GitHub --- click that.
+
+<img src="images/colab_open.png" alt="colab popup" width="200">
+
+Then in the search box, input the URL
+
+```txt
+https://github.com/Benkendorfer/ErUM_Transformers_Tutorial_2025/tree/main
+```
+
+You will see two options appear.
+
+<img src="images/open_github.png" alt="github selection" width="600">
+
+Click on the desired notebook (we will start with the one called `Attention`, and finish with `Prompt_Engineering`).
+
+In the `Attention` notebook, you will first need to run the code in the section titled `Setup for Google Colab`. This will set up the environment for everything to run correctly. It may take 2-5 minutes, so please be patient.
