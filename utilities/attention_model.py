@@ -39,7 +39,7 @@ def scaled_dot_product_attention(q, k, v, mask=None):
     scores = (q @ k.transpose(-2, -1)) / np.sqrt(q.size(-1))
     if mask is not None:
         scores = scores.masked_fill(mask == 0, float('-inf'))
-    attn = F.softmax(scores, dim=-1)
+    attn = F.softmax(scores, dim=0)
 
     # The @ symbol is used for matrix multiplication in PyTorch.
     return attn @ v
@@ -145,7 +145,7 @@ class RequestClassifier(nn.Module):
     A simple model that stacks multiple encoder layers to classify requests.
     """
 
-    def __init__(self, vocab_size, d_attention=128, num_layers=2):
+    def __init__(self, vocab_size, d_attention=128, d_embedding=128, num_layers=2):
         super().__init__()
         self.embed = nn.Embedding(vocab_size, d_attention)
         self.layers = nn.ModuleList([

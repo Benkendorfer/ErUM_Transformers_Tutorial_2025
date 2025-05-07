@@ -83,6 +83,6 @@ def plot_attention(tokens, attn: np.ndarray):
     ax.set_yticks(range(len(tokens)))
     ax.set_xticklabels(tokens, rotation=90)
     ax.set_yticklabels(tokens)
-    plt.xlabel("Key positions (influenced)")
-    plt.ylabel("Query positions (influencing)")
+    plt.ylabel("Key positions (attended by)")
+    plt.xlabel("Query positions (attending to)")
     plt.show()
