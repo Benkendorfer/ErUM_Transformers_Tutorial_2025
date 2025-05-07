@@ -12,7 +12,8 @@ dependencies:
   - pytorch
   - scikit-learn
   - spacy
-  - torchtext=0.17.0
   - transformers
   - nbstripout
+  - ipywidgets
+  - torchtext
 prefix: /Users/keesbenkendorfer/miniconda3/envs/ErUM
