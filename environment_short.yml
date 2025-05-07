@@ -6,10 +6,11 @@ channels:
 dependencies:
   - ipykernel
   - matplotlib
-  - numpy
+  - numpy[version='<2']
   - pandas
   - python
   - pytorch
   - torchtext=0.17.0
   - scikit-learn
+  - spacy
 prefix: /Users/keesbenkendorfer/miniconda3/envs/ErUM-2
