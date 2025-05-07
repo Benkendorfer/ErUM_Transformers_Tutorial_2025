@@ -39,10 +39,16 @@ def scaled_dot_product_attention(q, k, v, mask=None):
     if mask is not None:
         scores = scores.masked_fill(mask == 0, float('-inf'))
     attn = F.softmax(scores, dim=-1)
+
+    # The @ symbol is used for matrix multiplication in PyTorch.
     return attn @ v
 
 
 class SimpleAttention(nn.Module):
+    """
+    A simple attention mechanism.
+    """
+
     def __init__(self, d_model):
         super().__init__()
         self.q = nn.Linear(d_model, d_model)
@@ -51,6 +57,26 @@ class SimpleAttention(nn.Module):
         self.out = nn.Linear(d_model, d_model)
 
     def forward(self, x, mask=None, return_attn=False):
+        """
+        The forward pass of the attention mechanism.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor of shape (batch_size, seq_len, d_model).
+        mask : torch.Tensor, optional
+            Mask tensor of shape (batch_size, seq_len). Default is None.
+        return_attn : bool, optional
+            If True, return the attention weights. Default is False.
+
+        Returns
+        -------
+        torch.Tensor
+            Output tensor of shape (batch_size, seq_len, d_model).
+        torch.Tensor, optional
+            Attention weights of shape (batch_size, num_heads, seq_len, seq_len).
+            Only returned if return_attn is True.
+        """
         # x: [B, S, D], mask: Bool [B, S] True=real
         Q, K, V = self.q(x), self.k(x), self.v(x)
         scores  = (Q @ K.transpose(-2,-1)) / np.sqrt(Q.size(-1))
@@ -60,8 +86,13 @@ class SimpleAttention(nn.Module):
         out  = self.out(attn @ V)                    # [B, S, D]
         return (out, attn) if return_attn else out
 
-# Now a tiny encoder layer: attention + FFN + residual & norm
+
 class SimpleEncoderLayer(nn.Module):
+    """
+    A simple encoder layer that consists of an attention mechanism and a
+    feedforward network.
+    """
+
     def __init__(self, d_model, dim_feedforward=512, dropout=0.1):
         super().__init__()
         self.self_attn = SimpleAttention(d_model)
@@ -75,23 +106,51 @@ class SimpleEncoderLayer(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x, mask=None, return_attn=False):
+        """
+        The forward pass of the encoder layer.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor of shape (batch_size, seq_len, d_model).
+        mask : torch.Tensor, optional
+            Mask tensor of shape (batch_size, seq_len). Default is None.
+        return_attn : bool, optional
+            If True, return the attention weights. Default is False.
+
+        Returns
+        -------
+        torch.Tensor
+            Output tensor of shape (batch_size, seq_len, d_model).
+        torch.Tensor, optional
+            Attention weights of shape (batch_size, num_heads, seq_len, seq_len).
+            Only returned if return_attn is True.
+        """
         if return_attn:
             attn_out, attn = self.self_attn(x, mask=mask, return_attn=True)
         else:
             attn_out = self.self_attn(x, mask=mask)
+            attn = None
         x = self.norm1(x + self.dropout(attn_out))
         x = self.norm2(x + self.dropout(self.ff(x)))
-        return (x, attn) if return_attn else x
 
-# Stack N layers and attach classifier
+        if return_attn:
+            return (x, attn)
+
+        return x
+
 class RequestClassifier(nn.Module):
-    def __init__(self, vocab_size, d_model=128, num_layers=2):
+    """
+    A simple model that stacks multiple encoder layers to classify requests.
+    """
+
+    def __init__(self, vocab_size, d_attention=128, num_layers=2):
         super().__init__()
-        self.embed = nn.Embedding(vocab_size, d_model)
+        self.embed = nn.Embedding(vocab_size, d_attention)
         self.layers = nn.ModuleList([
-            SimpleEncoderLayer(d_model) for _ in range(num_layers)
+            SimpleEncoderLayer(d_attention) for _ in range(num_layers)
         ])
-        self.classifier = nn.Linear(d_model, 2)
+        self.classifier = nn.Linear(d_attention, 2)
 
     def forward(self, src, src_key_padding_mask=None, return_attn=False):
         pad_mask   = src_key_padding_mask
